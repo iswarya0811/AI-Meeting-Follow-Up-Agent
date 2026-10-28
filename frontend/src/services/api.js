@@ -1,5 +1,5 @@
-const API_BASE_URL = import.meta.env.VITE_API_URL || "https://meeting-agent-backend-31zj.onrender.com";
-
+const RAW_BASE_URL = import.meta.env.VITE_API_URL || "https://meeting-agent-backend-31zj.onrender.com";
+const API_BASE_URL = RAW_BASE_URL.replace(/\/+$/, "");
 /**
  * Sends a text input (meeting transcript line or email) to the backend for analysis.
  */
