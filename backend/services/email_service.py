@@ -1,22 +1,56 @@
 import os
 import smtplib
+import json
+import urllib.request
+import urllib.error
 from email.message import EmailMessage
 
 def send_email(recipient: str, subject: str, body: str) -> bool:
     """
-    Sends an email using standard Python smtplib and EmailMessage.
-    
-    Reads server configuration and login credentials from environment variables.
+    Sends an email using Resend HTTP API (if RESEND_API_KEY is present)
+    or standard Python smtplib / EmailMessage as fallback.
     """
-    # 1. Fetch environment variables
-    smtp_host = os.getenv("SMTP_HOST")
-    smtp_port = os.getenv("SMTP_PORT")
-    smtp_username = os.getenv("SMTP_USERNAME")
-    smtp_password = os.getenv("SMTP_PASSWORD")
-    email_from = os.getenv("EMAIL_FROM")
+    resend_api_key = os.getenv("RESEND_API_KEY", "").strip()
+    
+    # ---------------- 1. RESEND HTTP API (Modern Cloud Delivery over HTTPS) ----------------
+    if resend_api_key:
+        url = "https://api.resend.com/emails"
+        from_email = os.getenv("RESEND_FROM", "AI Meeting Agent <onboarding@resend.dev>")
+        headers = {
+            "Authorization": f"Bearer {resend_api_key}",
+            "Content-Type": "application/json"
+        }
+        payload = {
+            "from": from_email,
+            "to": [recipient],
+            "subject": subject,
+            "text": body
+        }
+        try:
+            req = urllib.request.Request(
+                url, 
+                data=json.dumps(payload).encode('utf-8'), 
+                headers=headers, 
+                method="POST"
+            )
+            with urllib.request.urlopen(req, timeout=15) as resp:
+                if resp.status in [200, 201]:
+                    return True
+                raise ConnectionError(f"Resend API returned status {resp.status}")
+        except urllib.error.HTTPError as he:
+            err_body = he.read().decode('utf-8', errors='ignore')
+            raise ConnectionError(f"Resend API error ({he.code}): {err_body}")
+        except Exception as e:
+            raise ConnectionError(f"Resend delivery failed: {str(e)}")
+
+    # ---------------- 2. STANDARD SMTP FALLBACK (Local / Direct) ----------------
+    smtp_host = os.getenv("SMTP_HOST", "").strip()
+    smtp_port = os.getenv("SMTP_PORT", "").strip()
+    smtp_username = os.getenv("SMTP_USERNAME", "").strip()
+    smtp_password = os.getenv("SMTP_PASSWORD", "").replace(" ", "").strip().strip('"').strip("'")
+    email_from = os.getenv("EMAIL_FROM", "").strip()
     smtp_use_tls = os.getenv("SMTP_USE_TLS", "true").lower() == "true"
 
-    # 2. Check if configuration is missing
     if not all([smtp_host, smtp_port, smtp_username, smtp_password, email_from]):
         missing = [
             var for var, val in {
@@ -28,25 +62,21 @@ def send_email(recipient: str, subject: str, body: str) -> bool:
             }.items() if not val
         ]
         raise ValueError(
-            f"SMTP configuration is incomplete. Missing variables: {', '.join(missing)}."
+            f"Email configuration is incomplete. Missing variables: {', '.join(missing)} (or configure RESEND_API_KEY)."
         )
 
-    # Convert port to integer
     try:
         port = int(smtp_port)
     except ValueError:
         raise ValueError(f"Invalid SMTP_PORT: '{smtp_port}'. Must be an integer.")
 
-    # 3. Construct email using modern EmailMessage class
     msg = EmailMessage()
     msg['Subject'] = subject
     msg['From'] = email_from
     msg['To'] = recipient
     msg.set_content(body)
 
-    # 4. Connect to SMTP server and send
     try:
-        # Use SMTP_SSL for port 465 (SMTPS), standard SMTP for others
         if port == 465:
             server = smtplib.SMTP_SSL(smtp_host, port, timeout=10)
         else:
@@ -56,12 +86,9 @@ def send_email(recipient: str, subject: str, body: str) -> bool:
                 server.starttls()
                 server.ehlo()
             
-        # Authenticate if login credentials are provided
-        # (Skip authentication if connecting to our local test server on port 1025)
         if smtp_username and (smtp_host not in ["127.0.0.1", "localhost"] or port != 1025):
             server.login(smtp_username, smtp_password)
             
-        # Send using the modern send_message API
         server.send_message(msg)
         server.quit()
         return True
