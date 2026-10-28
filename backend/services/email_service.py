@@ -15,7 +15,7 @@ def send_email(recipient: str, subject: str, body: str) -> bool:
     # ---------------- 1. RESEND HTTP API (Modern Cloud Delivery over HTTPS) ----------------
     if resend_api_key:
         url = "https://api.resend.com/emails"
-        from_email = os.getenv("RESEND_FROM", "AI Meeting Agent <onboarding@resend.dev>")
+        from_email = "onboarding@resend.dev"
         headers = {
             "Authorization": f"Bearer {resend_api_key}",
             "Content-Type": "application/json"
