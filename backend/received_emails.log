@@ -1,0 +1,169 @@
+=== EMAIL RECEIVED FROM CLIENT ('127.0.0.1', 52116) ===
+Content-Type: multipart/mixed; boundary="===============3827717587939501861=="
+MIME-Version: 1.0
+From: agent@meeting.local
+To: user@example.com
+Subject: Integration Test: Mock SMTP Verification
+
+--===============3827717587939501861==
+Content-Type: text/plain; charset="us-ascii"
+MIME-Version: 1.0
+Content-Transfer-Encoding: 7bit
+
+This is a verification test to ensure the mock SMTP socket server successfully processes commands and saves the email.
+--===============3827717587939501861==--
+.
+
+==================================================
+
+=== EMAIL RECEIVED FROM CLIENT ('127.0.0.1', 51709) ===
+Content-Type: multipart/mixed; boundary="===============5274729834557616830=="
+MIME-Version: 1.0
+From: agent@meeting.local
+To: iswaryalakshmi0811@gmail.com
+Subject: =?utf-8?q?Meeting_Follow-Up_=E2=80=94_Action_Items?=
+
+--===============5274729834557616830==
+Content-Type: text/plain; charset="us-ascii"
+MIME-Version: 1.0
+Content-Transfer-Encoding: 7bit
+
+Hi team,
+
+Here are the action items discussed in the meeting:
+
+1. Nikhil
+   Task: Login module
+   Deadline: by the next sprint
+   Priority: Low
+
+Please complete the assigned tasks within the specified deadlines.
+
+Regards,
+AI Meeting Follow-Up Agent
+--===============5274729834557616830==--
+.
+
+==================================================
+
+=== [SIMULATION EMAIL] TO: test@example.com ===
+Subject: Test Subject
+
+Test Body
+==================================================
+
+=== [SIMULATION EMAIL] TO: test@example.com ===
+Subject: Test Subject
+
+Test Body
+==================================================
+
+=== EMAIL RECEIVED FROM CLIENT ('127.0.0.1', 55366) ===
+Content-Type: multipart/mixed; boundary="===============5955804268821913576=="
+MIME-Version: 1.0
+From: agent@meeting.local
+To: iswaryalakshmi0811@gmail.com
+Subject: =?utf-8?q?Meeting_Follow-Up_=E2=80=94_Action_Items?=
+
+--===============5955804268821913576==
+Content-Type: text/plain; charset="us-ascii"
+MIME-Version: 1.0
+Content-Transfer-Encoding: 7bit
+
+Hi team,
+
+Here are the action items discussed in the meeting:
+
+1. Nikhil
+   Task: Login module
+   Deadline: by the next sprint
+   Priority: Low
+
+Please complete the assigned tasks within the specified deadlines.
+
+Regards,
+AI Meeting Follow-Up Agent
+--===============5955804268821913576==--
+.
+
+==================================================
+
+=== [SIMULATION EMAIL] TO: test@example.com ===
+Subject: Test Subject
+
+Test Body
+==================================================
+
+=== EMAIL RECEIVED FROM CLIENT ('127.0.0.1', 56085) ===
+Subject: Integration Test: Real SMTP Verification
+From: agent@meeting.local
+To: recipient@example.com
+Content-Type: text/plain; charset="utf-8"
+Content-Transfer-Encoding: 7bit
+MIME-Version: 1.0
+
+Here are the action items discussed...
+.
+
+==================================================
+
+=== EMAIL RECEIVED FROM CLIENT ('127.0.0.1', 59969) ===
+Content-Type: multipart/mixed; boundary="===============9032522375991995894=="
+MIME-Version: 1.0
+From: agent@meeting.local
+To: iswaryalakshmi0811@gmail.com
+Subject: =?utf-8?q?Meeting_Follow-Up_=E2=80=94_Action_Items?=
+
+--===============9032522375991995894==
+Content-Type: text/plain; charset="us-ascii"
+MIME-Version: 1.0
+Content-Transfer-Encoding: 7bit
+
+Hi team,
+
+Here are the action items discussed in the meeting:
+
+1. Nikhil
+   Task: Login module
+   Deadline: by the next sprint
+   Priority: Low
+
+Please complete the assigned tasks within the specified deadlines.
+
+Regards,
+AI Meeting Follow-Up Agent
+--===============9032522375991995894==--
+.
+
+==================================================
+
+=== EMAIL RECEIVED FROM CLIENT ('127.0.0.1', 53486) ===
+Content-Type: multipart/mixed; boundary="===============0093539055024044227=="
+MIME-Version: 1.0
+From: agent@meeting.local
+To: iswaryalakshmi0811@gmail.com
+Subject: =?utf-8?q?Meeting_Follow-Up_=E2=80=94_Action_Items?=
+
+--===============0093539055024044227==
+Content-Type: text/plain; charset="us-ascii"
+MIME-Version: 1.0
+Content-Transfer-Encoding: 7bit
+
+Hi team,
+
+Here are the action items discussed in the meeting:
+
+1. Nikhil
+   Task: Login module
+   Deadline: by the next sprint
+   Priority: Low
+
+Please complete the assigned tasks within the specified deadlines.
+
+Regards,
+AI Meeting Follow-Up Agent
+--===============0093539055024044227==--
+.
+
+==================================================
+
