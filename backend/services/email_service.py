@@ -11,16 +11,47 @@ def send_email(recipient: str, subject: str, body: str) -> bool:
     or standard Python smtplib / EmailMessage as fallback.
     """
     resend_api_key = os.getenv("RESEND_API_KEY", "").strip()
+        brevo_key = os.getenv("BREVO_API_KEY", "").strip()
+    if brevo_key:
+        brevo_sender = os.getenv("BREVO_SENDER", "").strip()
+        if not brevo_sender:
+            raise ValueError("BREVO_SENDER is not set.")
+        payload = {
+            "sender": {"name": "Meeting Agent", "email": brevo_sender},
+            "to": [{"email": recipient}],
+            "subject": subject,
+            "textContent": body,
+        }
+        headers = {
+            "api-key": brevo_key,
+            "Content-Type": "application/json",
+            "Accept": "application/json",
+            "User-Agent": "meeting-followup-agent/1.0",
+        }
+        try:
+            req = urllib.request.Request(
+                "https://api.brevo.com/v3/smtp/email",
+                data=json.dumps(payload).encode("utf-8"),
+                headers=headers,
+                method="POST",
+            )
+            with urllib.request.urlopen(req, timeout=15) as resp:
+                if resp.status in (200, 201):
+                    return True
+                raise ConnectionError(f"Brevo returned status {resp.status}")
+        except urllib.error.HTTPError as he:
+            err_body = he.read().decode("utf-8", errors="ignore")
+            raise ConnectionError(f"Brevo API error ({he.code}): {err_body}")
     
     # ---------------- 1. RESEND HTTP API (Modern Cloud Delivery over HTTPS) ----------------
     if resend_api_key:
         url = "https://api.resend.com/emails"
         from_email = "onboarding@resend.dev"
         headers = {
-    "Authorization": f"Bearer {resend_api_key}",
-    "Content-Type": "application/json",
-    "Accept": "application/json",
-    "User-Agent": "meeting-followup-agent/1.0"
+            "Authorization": f"Bearer {resend_api_key}",
+            "Content-Type": "application/json",
+            "Accept": "application/json",
+            "User-Agent": "meeting-followup-agent/1.0"
 }
         payload = {
             "from": from_email,
