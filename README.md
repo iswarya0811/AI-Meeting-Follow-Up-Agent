@@ -1,287 +1,167 @@
-# AI Meeting Follow-Up Agent
+# 📋 AI Meeting Follow-Up Agent
 
-The **AI Meeting Follow-Up Agent** is a full-stack, end-to-end machine learning application that analyzes meeting transcripts or emails to automatically extract action items, assignees, deadlines, priorities, and decisions. When action items are identified, the system generates follow-up Email and SMS notifications, allowing users to review, edit, and send them directly through real integration services.
+Turn meeting conversations into actionable follow-ups. Paste a transcript, and the app detects action items, assignees, deadlines and priorities with an ML pipeline, then drafts and sends a follow-up email.
 
-Turn messy, multi-sentence meeting transcripts and long email chains into structured, actionable items in seconds.
+**Live demo:** https://ai-meeting-follow-up-agent-gamma.vercel.app
+**Backend API:** https://meeting-agent-backend-31zj.onrender.com
+
+> The backend runs on Render's free tier, so the first request after a period of inactivity can take 30-60 seconds while the server wakes up.
 
 ---
 
-## 🏗️ Architecture
+## ✨ Features
 
-```text
-       ┌────────────────────────────────────────────────────────┐
-       │                   React Frontend (Vite)                │
-       └───────────┬────────────────────────────────▲───────────┘
-                   │                                │
-                   │  POST /predict (JSON Text)     │  JSON Predictions
-                   │                                │  & Follow-up Templates
-                   ▼                                │
-       ┌────────────────────────────────────────────┴───────────┐
-       │                   FastAPI Backend                      │
-       └─────┬────────────────────────────────────────────────▲─┘
-             │                                                │
-             │  Send Requests                                 │
-             ▼                                                │
-       ┌───────────┐                                          │
-       │ Send API  ├──────────────────┐                       │
-       └─────┬─────┘                  │                       │
-             │                        │                       │
-             ▼ (SMTP)                 ▼ (Twilio API)          │
-       ┌───────────┐            ┌───────────┐                 │
-       │ SMTP Mail │            │ Twilio SMS│                 │
-       │ Server    │            │ Gateway   │                 │
-       └─────┬─────┘            └─────┬─────┘                 │
-             │                        │                       │
-             ▼ (Recipients)           ▼ (Recipients)          │
-                                                              │
-             ┌───────────────────────────────────────────┐    │
-             │             ML Inference Pipeline         ├────┘
-             │  - Line-by-line Sentence Segmentation     │
-             │  - Preprocessing & Preserving Temporals   │
-             │  - TF-IDF Vectorizer Transform            │
-             │  - Logistic Regression (Primary)          │
-             │  - Keyword Lookup Fallbacks (OOD Inputs)  │
-             └───────────────────────────────────────────┘
+- **Action item detection:** classifies a transcript as `ACTION` or `NON-ACTION`
+- **Smart extraction:** pulls out assignee, task, deadline and priority for each action item
+- **Auto-generated follow-up email:** editable subject and message before sending
+- **Real email delivery** through an HTTPS email API (Brevo or Resend)
+- **Simulation Mode:** test the full flow without sending a real email
+- **Copy Email / Schedule Reminder** actions
+- **Live status bar:** ML status, API status, scheduled and sent counters
+
+---
+
+## 🧱 Tech Stack
+
+| Layer | Technology |
+|---|---|
+| Frontend | React 18, Vite |
+| Backend | Python 3.11, FastAPI |
+| ML / NLP | scikit-learn (TF-IDF + Logistic Regression), rule-based NLP fallbacks |
+| Email | Brevo API / Resend API over HTTPS (SMTP as fallback) |
+| Hosting | Vercel (frontend), Render (backend) |
+
+---
+
+## 🗂️ Project Structure
+
 ```
-
----
-
-## 📂 Folder Structure
-
-```text
-Follow Up Agent/
-│
-├── dataset/
-│   └── AI_Meeting_Follow_Up_Preprocessed_Clean.xlsx  # Training data
-│
+.
 ├── backend/
-│   ├── app.py                     # FastAPI server, schemas & route handlers
-│   ├── requirements.txt           # Python library dependencies
-│   │
-│   ├── ml/
-│   │   ├── __init__.py
-│   │   ├── preprocess.py          # Lowercasing, whitespace & temporal normalization
-│   │   ├── train.py               # Model training script
-│   │   ├── predict.py             # Inference pipeline with hybrid fallback extraction
-│   │   └── evaluate.py            # Macro precision, recall, F1 computation
-│   │
-│   ├── models/                    # Serialized joblib artifacts
-│   │   ├── tfidf_vectorizer.pkl
-│   │   ├── label_model.pkl
-│   │   └── ...
-│   │
-│   └── services/
-│       ├── __init__.py
-│       ├── followup_generator.py  # Email and SMS template compilers
-│       ├── email_service.py       # SMTP wrapper
-│       └── sms_service.py         # Twilio REST API wrapper
-│
+│   ├── app.py                  # FastAPI app and endpoints
+│   ├── services/
+│   │   └── email_service.py    # Email sending (Brevo / Resend / SMTP)
+│   ├── requirements.txt
+│   └── ...                     # ML models and pipeline
 ├── frontend/
-│   ├── package.json               # Node modules list
-│   ├── vite.config.js             # Vite development configurations
-│   ├── index.html                 # Entry point page
-│   └── src/
-│       ├── components/            # Reusable UI modules
-│       │   ├── Header.jsx
-│       │   ├── InputSection.jsx
-│       │   ├── AnalysisResults.jsx (Displays multiple action cards)
-│       │   ├── FollowUp.jsx        (Send email and SMS forms)
-│       │   ├── PriorityBadge.jsx
-│       │   └── LoadingState.jsx
-│       ├── services/
-│       │   └── api.js             # Fetch API wrapper
-│       ├── App.jsx                # Main controller React file
-│       ├── main.jsx               # Render mounting root
-│       └── styles/
-│           └── App.css            # Custom responsive HSL dashboard stylesheet
-│
-├── .env.example                   # Environmental placeholders
-├── README.md
-└── .gitignore
+│   ├── src/
+│   │   └── ...                 # React components (EmailPanel.jsx, etc.)
+│   ├── package.json
+│   └── vite.config.js
+└── README.md
 ```
-
----
-
-## 📊 Dataset & Model Details
-
-The model is trained on the dataset: `dataset/AI_Meeting_Follow_Up_Preprocessed_Clean.xlsx`.
-
-### Targets Trained:
-* **`label`**: Classifies text as `ACTION` or `NON_ACTION` (100% Accuracy).
-* **`action_item`**: Extracts specific task names (e.g. `Login module`, `Database schema`) (100% Accuracy).
-* **`assignee`**: Extracts the person assigned to the task (e.g. `Nikhil`, `Sneha`) (100% Accuracy).
-* **`deadline`**: Extracts timeframe phrases (e.g. `by the next sprint`, `tomorrow`) (100% Accuracy).
-* **`decision`**: Identifies meeting decisions (e.g. `discussion only`, `not applicable`) (100% Accuracy).
-* **`priority`**: Evaluates task priority (`high`, `medium`, `low`). Due to uniform distribution across other variables in the dataset (i.e. priority is random relative to text keywords), the model gets `~55% Accuracy`. The API supports this by outputting the model prediction but noting limitations.
-
----
-
-## 🚀 Setup & Installation
-
-### Prerequisite
-Ensure you have `Python 3.8+` and `Node.js 16+` installed.
-
-### 1. Environmental Variables Configuration
-Create a `.env` file in the project root folder. Copy the contents of `.env.example` and fill in your actual SMTP mail server and Twilio gateway credentials:
-
-```bash
-cp .env.example .env
-```
-
-Edit the `.env` file:
-```env
-# SMTP Mail Server
-SMTP_HOST=smtp.gmail.com
-SMTP_PORT=587
-SMTP_USERNAME=your-email@gmail.com
-SMTP_PASSWORD=your-app-password
-EMAIL_FROM=your-email@gmail.com
-
-# Twilio SMS Gateway
-TWILIO_ACCOUNT_SID=ACXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXX
-TWILIO_AUTH_TOKEN=your_auth_token
-TWILIO_PHONE_NUMBER=+1234567890
-```
-
-### 2. Backend Setup & Model Training
-Open a terminal in the project root:
-
-```bash
-# Navigate to backend directory
-cd backend
-
-# Create a virtual environment
-python -m venv venv
-
-# Activate virtual environment
-# On Windows:
-venv\Scripts\activate
-# On macOS/Linux:
-source venv/bin/activate
-
-# Install dependencies
-pip install -r requirements.txt
-
-# Run model training and validation
-python ml/train.py
-```
-
-### 3. Start the Backend API
-From the `backend/` directory (with virtual environment active):
-
-```bash
-uvicorn app:app --reload
-```
-
-The API will be available at `http://localhost:8000`. You can visit documentation at `http://localhost:8000/docs`.
-
-### 4. Frontend Setup & Run
-Open another terminal in the project root:
-
-```bash
-# Navigate to frontend directory
-cd frontend
-
-# Install Node modules
-npm install
-
-# Run Vite dev server
-npm run dev
-```
-
-The React dashboard will launch at `http://localhost:5173`.
 
 ---
 
 ## 🔌 API Endpoints
 
-### 1. POST `/predict`
-Segments the input text line-by-line, runs the prediction models on each line, groups related sentences (merging follow-up deadlines into their respective active tasks), and returns a list of action item details along with consolidated templates.
+| Method | Endpoint | Description |
+|---|---|---|
+| `POST` | `/predict` | Analyzes a transcript and returns the classification and action items |
+| `POST` | `/send-email` | Sends the follow-up email (or simulates it) |
 
-#### Request body:
+**`POST /send-email` body**
+
 ```json
 {
-  "text": "Priya: Rahul, please fix the mobile login issues and test the login flow by Thursday.\nPriya: Ananya, please update the API error handling and add proper validation for invalid requests. Please complete it by Wednesday."
-}
-```
-
-#### Response body:
-```json
-{
-  "label": "ACTION",
-  "follow_up_required": true,
-  "action_items": [
-    {
-      "action_item": "Login module",
-      "assignee": "Rahul",
-      "deadline": "by Thursday",
-      "priority": "medium",
-      "decision": "action item assigned",
-      "speaker": "Priya",
-      "original_sentence": "Rahul, please fix the mobile login issues and test the login flow by Thursday."
-    },
-    {
-      "action_item": "API integration",
-      "assignee": "Ananya",
-      "deadline": "by Wednesday",
-      "priority": "low",
-      "decision": "action item assigned",
-      "speaker": "Priya",
-      "original_sentence": "Ananya, please update the API error handling and add proper validation for invalid requests. Please complete it by Wednesday."
-    }
-  ],
-  "follow_up": {
-    "email": {
-      "subject": "Meeting Follow-Up — Action Items",
-      "body": "Hi team,\n\nHere are the action items discussed in the meeting:\n\n1. Rahul\n   Task: Login module\n   Deadline: by Thursday\n   Priority: Medium\n\n2. Ananya\n   Task: API integration\n   Deadline: by Wednesday\n   Priority: Low\n\nPlease complete the assigned tasks within the specified deadlines.\n\nRegards,\nAI Meeting Follow-Up Agent"
-    },
-    "sms": "Meeting Follow-Up: 1. Rahul (Login module: by Thursday) 2. Ananya (API integration: by Wednesday)"
-  }
-}
-```
-
-### 2. POST `/send-email`
-Sends the email using the configured SMTP settings.
-
-#### Request body:
-```json
-{
-  "recipient": "user@example.com",
+  "recipient": "someone@example.com",
   "subject": "Meeting Follow-Up — Action Items",
-  "body": "..."
-}
-```
-
-#### Response:
-```json
-{
-  "success": true,
-  "message": "Email sent successfully to user@example.com"
-}
-```
-
-### 3. POST `/send-sms`
-Sends the SMS using the configured Twilio settings.
-
-#### Request body:
-```json
-{
-  "phone_number": "+1234567890",
-  "message": "..."
-}
-```
-
-#### Response:
-```json
-{
-  "success": true,
-  "message": "SMS sent successfully to +1234567890"
+  "body": "Hi team, ...",
+  "simulation_mode": false
 }
 ```
 
 ---
 
-## ⚠️ Limitations & Troubleshooting
+## 🚀 Run Locally
 
-* **Out-of-Distribution Inputs**: Due to the template-based generation of the training dataset, Logistic Regression models can predict `Not Applicable` when names or tasks appear in combinations not seen during training. The prediction module uses a Named Entity lookup fallback to resolve this and extract the correct fields.
-* **SMTP / Twilio Configuration**: If you click "Send" without configuring credentials in the `.env` file, the UI will report: `Email sending is not configured. Please configure the SMTP environment variables.` or `SMS sending is not configured. Please configure the Twilio environment variables.` (corresponding to `503 Service Unavailable` returned by the backend).
+### 1. Clone
+
+```bash
+git clone https://github.com/<your-username>/<your-repo>.git
+cd <your-repo>
+```
+
+### 2. Backend
+
+```bash
+cd backend
+python -m venv venv
+source venv/bin/activate        # Windows: venv\Scripts\activate
+pip install -r requirements.txt
+uvicorn app:app --reload --port 8000
+```
+
+### 3. Frontend
+
+```bash
+cd frontend
+npm install
+npm run dev
+```
+
+Point the frontend at your backend by setting its API URL (for example `VITE_API_URL=http://localhost:8000` in `frontend/.env`). Use whichever variable name your code reads.
+
+---
+
+## 🔐 Environment Variables (Backend)
+
+Set these in a `.env` file locally, or in the Render dashboard under **Environment**. Never commit real keys.
+
+| Variable | Description |
+|---|---|
+| `BREVO_API_KEY` | Brevo API key (starts with `xkeysib-`) |
+| `BREVO_SENDER` | Verified sender email in Brevo |
+| `RESEND_API_KEY` | Resend API key (starts with `re_`), used if Brevo is not set |
+| `RESEND_FROM` | Sender address for Resend, e.g. `Meeting Agent <noreply@yourdomain.com>` |
+| `SMTP_HOST`, `SMTP_PORT`, `SMTP_USERNAME`, `SMTP_PASSWORD`, `EMAIL_FROM` | SMTP fallback (works locally, blocked on Render's free tier) |
+
+Provider priority: **Brevo, then Resend, then SMTP**.
+
+---
+
+## 📧 Email Setup Notes
+
+Render's free tier blocks outbound SMTP ports (25, 465, 587), so email is sent over HTTPS (port 443) using an email API.
+
+- **Brevo:** verify a sender, create an API key with **Transactional email = All**, and set `BREVO_API_KEY` and `BREVO_SENDER`. The free plan allows 300 emails/day.
+- **Resend:** the sandbox sender `onboarding@resend.dev` only delivers to the email you signed up with. To email anyone, verify your own domain and set `RESEND_FROM`.
+- Python's default `urllib` User-Agent gets blocked by Cloudflare (error `1010`), so the code sends a custom `User-Agent` header.
+- Emails sent from a Gmail address may land in spam. Ask recipients to check their spam folder.
+
+---
+
+## ☁️ Deployment
+
+**Backend (Render)**
+- Build command: `pip install -r requirements.txt`
+- Start command: `uvicorn app:app --host 0.0.0.0 --port $PORT`
+- Add the environment variables above
+
+**Frontend (Vercel)**
+- Framework preset: Vite
+- Set the backend API URL environment variable to your Render URL
+
+---
+
+## 🛠️ Troubleshooting
+
+| Problem | Cause and fix |
+|---|---|
+| `Network is unreachable` on send | SMTP is blocked on Render. Use the Brevo or Resend API. |
+| `403 error code: 1010` | Cloudflare blocked the default Python User-Agent. Add a custom `User-Agent` header. |
+| `403 validation_error` (Resend) | Sandbox sender limit. Verify a domain or use Brevo. |
+| `401` | Invalid API key. Regenerate it and update Render. |
+| First request is very slow | Render free tier is waking up. Wait and retry. |
+
+---
+
+## 👥 Team
+
+Built by **Team ProcastiNOTers**.
+
+---
+
+## 📄 License
+
+Add your license here (for example MIT).
