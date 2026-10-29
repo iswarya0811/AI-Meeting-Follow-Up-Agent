@@ -11,7 +11,7 @@ def send_email(recipient: str, subject: str, body: str) -> bool:
     or standard Python smtplib / EmailMessage as fallback.
     """
     resend_api_key = os.getenv("RESEND_API_KEY", "").strip()
-        brevo_key = os.getenv("BREVO_API_KEY", "").strip()
+    brevo_key = os.getenv("BREVO_API_KEY", "").strip()
     if brevo_key:
         brevo_sender = os.getenv("BREVO_SENDER", "").strip()
         if not brevo_sender:
@@ -42,6 +42,7 @@ def send_email(recipient: str, subject: str, body: str) -> bool:
         except urllib.error.HTTPError as he:
             err_body = he.read().decode("utf-8", errors="ignore")
             raise ConnectionError(f"Brevo API error ({he.code}): {err_body}")
+       
     
     # ---------------- 1. RESEND HTTP API (Modern Cloud Delivery over HTTPS) ----------------
     if resend_api_key:
