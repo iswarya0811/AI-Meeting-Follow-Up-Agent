@@ -17,9 +17,11 @@ def send_email(recipient: str, subject: str, body: str) -> bool:
         url = "https://api.resend.com/emails"
         from_email = "onboarding@resend.dev"
         headers = {
-            "Authorization": f"Bearer {resend_api_key}",
-            "Content-Type": "application/json"
-        }
+    "Authorization": f"Bearer {resend_api_key}",
+    "Content-Type": "application/json",
+    "Accept": "application/json",
+    "User-Agent": "meeting-followup-agent/1.0"
+}
         payload = {
             "from": from_email,
             "to": [recipient],
