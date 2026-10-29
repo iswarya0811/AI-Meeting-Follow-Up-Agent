@@ -158,7 +158,7 @@ Render's free tier blocks outbound SMTP ports (25, 465, 587), so email is sent o
 
 ## 👥 Team
 
-Built by **Team ProcastiNOTers**.
+Built by **Team TeenTitans**.
 
 ---
 
